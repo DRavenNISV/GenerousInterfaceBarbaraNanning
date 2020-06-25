@@ -29,7 +29,7 @@ Based on the [Tool Installation Guide](https://docs.google.com/document/d/1kIlm7
 
 The following things need to be done in order to run the application:
 
-* Serve or Deploy the Firebase Application based on the source code available in this repository.
+* Serve or Deploy the Firebase Application based on the source code available in this repository (excluding the .owl file) as stated above.
 * Install Stardog and run a Stardog Server (Windows: stardog-admin.bat server start --disable-security / Mac/Linux stardog-admin server start --disable-security)
 * Create a Stardog Database based on the provided ontology (.owl file). **Important** Make sure the endpoint of this database corresponds with the endpoint specified in the index.html file.   
 * Access the application on http://localhost:5000.
