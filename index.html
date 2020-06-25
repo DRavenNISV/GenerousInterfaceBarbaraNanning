@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <title>Generous Interface - Eeuwige Beweging</title>
+    <style>
+      body { font-family: sans-serif;}
+      .light { background: #666; color: #fff; }
+      .content .tagcloud { display: inline-block; text-align: center;}
+      ul { display: inline-block; }
+      a { color: #0366d6; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      #uri {word-wrap: break-word;}
+      #uri {overflow: hidden;}
+      hr {
+        border: 0;
+        clear:both;
+        display:block;
+        width: 96%;               
+        background-color: rgba(0,0,0,.1);
+        height: 1px;
+      } 
+      #infobox {
+        padding-left: 5px;
+      }
+    </style>
+    <!-- customize style -->
+    <style>
+        .tagcloud {
+            font-size: 16px;
+        }
+        .tagcloud--item {
+            padding: 2px 4px;
+            background-color: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .tagcloud--item:hover {
+            background-color: rgba(0,0,0,.1);
+            border: 1px solid #333;
+            -webkit-border-radius: 2px;
+            -moz-border-radius: 2px;
+            border-radius: 2px;
+            opacity: 1 !important;
+            z-index: 100 !important;
+        }
+        .light .tagcloud--item {
+            color: #fff;
+        }
+        .light .tagcloud--item:hover {
+            background-color: rgba(255,255,255,.1);
+            border: 1px solid #fff;
+        }
+    </style>
+
+    <style>
+    .navbar {
+      margin-bottom: 15px;
+    }
+
+    .tagcloud {
+      font-size: 16px;
+    }
+
+    .tagcloud--item {
+      padding: 2px 4px;
+      background-color: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .tagcloud--item:hover {
+      background-color: rgba(0,0,0,.1);
+      border: 1px solid #333;
+      -webkit-border-radius: 2px;
+      -moz-border-radius: 2px;
+      border-radius: 2px;
+      opacity: 1 !important;
+      z-index: 100 !important;
+    }
+
+    .light .tagcloud--item {
+      color: #fff;
+    }
+
+    .light .tagcloud--item:hover {
+      background-color: rgba(255,255,255,.1);
+      border: 1px solid #fff;
+    }
+    </style>
+  </head>
+  <body onload="filltags()">
+    <!-- Navbar with Header-->
+    <nav class="navbar navbar-dark bg-dark">
+      <span class="navbar-brand mb-0 h1">Generous Interface - Eeuwige Beweging</span>
+    </nav>
+    <!-- Main Body -->
+    <div class="container-fluid break-text">
+      <div class="row">
+        <!-- Interactive Environment-->
+        <div class="col-7">
+            <div class="content d-flex justify-content-center" id="cloud"></div>
+        </div>
+        <!-- Infobox -->
+        <div id="infobox" class="col-5">
+          <div class="text-break">
+            <h2 class="text-break" id="label"></h2>
+            <p id=uri class="lead"> </p>
+            <hr class="m-0">
+            <p id=description></p>
+          </div>
+          <div class="text-break" id="relations"></div>
+        </div>
+      </div>
+    </div>  
+
+    <!-- Optional JavaScript -->
+
+    <script src="./TagCloud.min.js"></script>
+    <script>
+      var myTags = [];
+
+      var tagCloud = TagCloud('.content', myTags,{
+
+        // radius in px
+        radius: 330,
+
+        // animation speed
+        // slow, normal, fast
+        maxSpeed: 'normal',
+        initSpeed: 'normal',
+
+        // 0 = top
+        // 90 = left
+        // 135 = right-bottom
+        direction: 135,
+
+        // interact with cursor move on mouse out
+        keep: true
+
+        });
+    </script>
+
+    <script>  
+      function filltags(){
+        var url = "http://localhost:5820/Barbara/query?reasoning=true";
+        var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?label WHERE { ?x rdfs:label ?label. {?x rdf:type owl:Class.} UNION {?x rdf:type owl:NamedIndividual.} }";
+        
+        $.ajax({
+          headers : {
+              Accept: 'application/sparql-results+json'
+          },
+          url: url,
+          data: {
+              query: query
+          },
+          success: function(data) {
+              var results = data.results.bindings;
+              results.sort(function() { return .5 - Math.random();});
+              var limit = 20;
+              var limitresults = results.slice(0, limit);
+          $.each(limitresults, function(key,data){
+            var artworkLabel = data["label"]["value"];
+            myTags.push(artworkLabel);
+            tagCloud.update(myTags);
+          });
+          }
+        });
+      }
+    </script>
+
+    <script>
+      var relationsarray = [];
+      var rootEl = document.querySelector('.content');
+      rootEl.addEventListener('click', function clickEventHandler(e) {
+          if (e.target.className === 'tagcloud--item') {
+            try{var div = document.getElementById('relations');
+            while(div.firstChild){
+                div.removeChild(div.firstChild);
+            }}
+            finally{
+            var label = e.target.innerText;
+            var querylabel = '"' +label+'"@en';
+            relationsarray = [];
+              var url = "http://localhost:5820/Barbara/query?reasoning=false";
+              var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Entity ?x ?y ?Description WHERE { ?Entity rdfs:label " + querylabel + ". ?Entity rdfs:comment ?Description. OPTIONAL{?Entity ?x ?z. ?z rdfs:label ?y.} FILTER (?x != rdfs:comment). FILTER (?x != rdfs:label).} ORDER BY (?x)";
+                $.ajax({
+                  headers : {
+                      Accept: 'application/sparql-results+json'
+                  },
+                  url: url,
+                  data: {
+                      query: query
+                  },
+                  success: function(data) {
+                      var results = data.results.bindings;
+                  $.each(results, function(key,data){
+                    var comment = data["Description"]["value"];
+                    var uri = data["Entity"]["value"];
+                    var elementlabel = document.getElementById("label");
+                    elementlabel.innerHTML = label;
+                    document.getElementById("uri").innerHTML = uri;
+                    document.getElementById("description").innerHTML = comment;
+                    var inforelation = data ["x"]["value"];
+                    inforelation = inforelation.split("#").pop();
+                    relationsarray.push(inforelation);
+                    var infovalue = data ["y"]["value"];
+                    var template = "<p class='text-break'>" + inforelation + ": <a href='javascript:clickInfobox(" + '"' + infovalue +'"' + ")'>"+ infovalue + "</a></p>";
+                    relations.insertAdjacentHTML("beforeend", template);
+                    if (relationsarray.includes("subClassOf")) {
+                      var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Instancelabel WHERE { ?Entity rdfs:label " + querylabel + ". ?Instance rdf:type ?Entity. ?Instance rdfs:label ?Instancelabel.}";
+                      relationsarray = [];
+                      $.ajax({
+                        headers : {
+                            Accept: 'application/sparql-results+json'
+                        },
+                        url: url,
+                        data: {
+                            query: query
+                        },
+                        success: function(data) {
+                            var results = data.results.bindings;
+                        $.each(results, function(key,data){
+                          var instance = data ["Instancelabel"]["value"];
+                          var template = "<p class='text-break'> <p>hasClassInstance: <a href='" + "javascript:clickInfobox(" + '"' + instance + '"'+ ")'>" + instance + "</a></p>";
+                          relations.insertAdjacentHTML("beforeend", template);
+                         });
+                        }
+                      });
+                    }
+                  });
+                  }
+                });
+                
+              var myTags = [];
+              var url = "http://localhost:5820/Barbara/query?reasoning=false"
+              var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Entity ?Labels ?Class WHERE { ?Entity rdfs:label" + querylabel + ". ?Entity rdf:type ?Class. ?Individuals rdf:type ?Class. ?Individuals rdfs:label ?Labels. FILTER (?Labels != "+ querylabel + "). FILTER (?Class != owl:NamedIndividual)}";
+                $.ajax({
+                  headers : {
+                      Accept: 'application/sparql-results+json'
+                  },
+                  url: url,
+                  data: {
+                      query: query
+                  },
+                  success: function(data) {
+                      var results = data.results.bindings;
+                      results.sort(function() { return .5 - Math.random();});
+                      var limit = 20;
+                      var limitresults = results.slice(0, limit);
+                  $.each(limitresults, function(key,data){
+                    var artworkLabel = data["Labels"]["value"];
+                    myTags.push(artworkLabel);
+                    tagCloud.update(myTags);
+                  });
+                  }
+                });
+              }
+              }
+            });
+    </script>
+    <script>
+    function clickInfobox(label){
+      var relationsarray = [];
+        try{var div = document.getElementById('relations');
+        while(div.firstChild){
+            div.removeChild(div.firstChild);
+        }}
+        finally{
+          var querylabel = '"' + label +'"@en';
+          relationsarray = [];
+          var url = "http://localhost:5820/Barbara/query?reasoning=false";
+          var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Entity ?x ?y ?Description WHERE { ?Entity rdfs:label " + querylabel + ". ?Entity rdfs:comment ?Description. OPTIONAL{?Entity ?x ?z. ?z rdfs:label ?y.} FILTER (?x != rdfs:comment). FILTER (?x != rdfs:label).} ORDER BY (?x)";
+          console.log(query);  
+          $.ajax({
+              headers : {
+                  Accept: 'application/sparql-results+json'
+              },
+              url: url,
+              data: {
+                  query: query
+              },
+              success: function(data) {
+                var results = data.results.bindings;
+                console.log(results);
+                $.each(results, function(key,data){
+                  var comment = data["Description"]["value"];
+                  var uri = data["Entity"]["value"];
+                  var elementlabel = document.getElementById("label");
+                  elementlabel.innerHTML = label;
+                  document.getElementById("uri").innerHTML = uri;
+                  document.getElementById("description").innerHTML = comment;
+                  var inforelation = data ["x"]["value"];
+                  inforelation = inforelation.split("#").pop();
+                  relationsarray.push(inforelation);
+                  var infovalue = data ["y"]["value"];
+                  var template = "<p class='text-break'>" + inforelation + ": <a href='javascript:clickInfobox(" + '"' + infovalue + '"' + ")'>"+ infovalue + "</a></p>";
+                  relations.insertAdjacentHTML("beforeend", template);
+                  if (relationsarray.includes("subClassOf")) {
+                    var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Instancelabel WHERE { ?Entity rdfs:label " + querylabel + ". ?Instance rdf:type ?Entity. ?Instance rdfs:label ?Instancelabel.}";
+                    relationsarray = [];
+                    $.ajax({
+                      headers : {
+                          Accept: 'application/sparql-results+json'
+                      },
+                      url: url,
+                      data: {
+                          query: query
+                      },
+                      success: function(data) {
+                          var results = data.results.bindings;
+                      $.each(results, function(key,data){
+                        var instance = data ["Instancelabel"]["value"];
+                        var template = "<p class='text-break'> <p>hasClassInstance: <a href='javascript:clickInfobox(" + '"' + instance + '"' + ")'>"+ instance + "</a></p>";
+                        relations.insertAdjacentHTML("beforeend", template);
+                        });
+                      }
+                    });
+                  }
+                });
+              }
+            });
+                
+            var myTags = [];
+            var url = "http://localhost:5820/Barbara/query?reasoning=false"
+            var query = "PREFIX BarbaraNanning: <http://www.semanticweb.org/ontologies/Daan/2020/BarbaraNanning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT DISTINCT ?Entity ?Labels ?Class WHERE { ?Entity rdfs:label" + querylabel + ". ?Entity rdf:type ?Class. ?Individuals rdf:type ?Class. ?Individuals rdfs:label ?Labels. FILTER (?Labels != "+ querylabel + "). FILTER (?Class != owl:NamedIndividual)}";
+              $.ajax({
+                headers : {
+                    Accept: 'application/sparql-results+json'
+                },
+                url: url,
+                data: {
+                    query: query
+                },
+                success: function(data) {
+                    var results = data.results.bindings;
+                    results.sort(function() { return .5 - Math.random();});
+                    var limit = 20;
+                    var limitresults = results.slice(0, limit);
+                $.each(limitresults, function(key,data){
+                  var artworkLabel = data["Labels"]["value"];
+                  myTags.push(artworkLabel);
+                  tagCloud.update(myTags);
+                });
+                }
+              });
+          }
+        }  
+    </script>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+  </body>
+</html>
